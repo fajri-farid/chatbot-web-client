@@ -494,14 +494,99 @@ input:focus-visible {
 .input-container {
   border-top: 1px solid var(--border);
   background: #fff;
-  padding: 16px 22px;
+  padding: 0 22px 16px;
 }
+
+/* ─── Image Preview Strip ─────────────────────────────────────────────────── */
+
+.image-preview-strip {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0 8px;
+  max-width: 920px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.image-preview-strip.hidden {
+  display: none;
+}
+
+.preview-thumb-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  overflow: visible;
+}
+
+.preview-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.preview-remove {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.preview-remove:hover {
+  background: #8b1a10;
+}
+
+/* ─── Input Form ──────────────────────────────────────────────────────────── */
 
 .input-form {
   display: flex;
   gap: 10px;
   max-width: 920px;
   margin: 0 auto;
+  padding-top: 12px;
+}
+
+/* Tombol lampiran (paperclip) */
+.attach-btn {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  align-self: center;
+}
+
+.attach-btn:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary-2);
+  color: var(--primary-2);
+}
+
+.attach-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 #queryInput {
@@ -517,12 +602,32 @@ input:focus-visible {
 #sendBtn {
   border-radius: 999px;
   min-width: 88px;
+  align-self: center;
 }
 
 #sendBtn:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* ─── Gambar di Bubble Chat User ──────────────────────────────────────────── */
+
+.message-images {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.message-thumb {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.3);
+  display: block;
+}
+
 
 .login-overlay {
   position: fixed;

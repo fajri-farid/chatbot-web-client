@@ -4,6 +4,8 @@ let apiBase = localStorage.getItem("api_base") || DEFAULT_API_BASE;
 let currentUser = null;
 let currentSessionId = null;
 let authToken = localStorage.getItem("auth_token") || "";
+let pendingImages = []; // [{ mime_type, data, preview_url }]
+const MAX_IMAGES = 2;
 
 const loginOverlay = document.getElementById("loginOverlay");
 const loginForm = document.getElementById("loginForm");
@@ -25,6 +27,9 @@ const chatContainer = document.getElementById("chatContainer");
 const chatForm = document.getElementById("chatForm");
 const queryInput = document.getElementById("queryInput");
 const sendBtn = document.getElementById("sendBtn");
+const attachBtn = document.getElementById("attachBtn");
+const imageFileInput = document.getElementById("imageFileInput");
+const imagePreviewStrip = document.getElementById("imagePreviewStrip");
 
 apiBaseInput.value = apiBase;
 
@@ -271,11 +276,22 @@ function safeMd(text) {
   return escapeHtml(escapedYears);
 }
 
-function addMessage(content, type, sources = [], debug = null) {
+function addMessage(content, type, sources = [], debug = null, images = []) {
   const message = document.createElement("div");
   message.className = `message ${type}-message`;
 
-  let html = `<div class="message-content">${type === "bot" ? safeMd(content) : escapeHtml(content)}</div>`;
+  let html = "";
+
+  // Tampilkan thumbnail gambar di atas teks untuk pesan user
+  if (type === "user" && images && images.length > 0) {
+    html += `<div class="message-images">`;
+    images.forEach((img, i) => {
+      html += `<img src="${img.preview_url}" alt="Gambar ${i + 1}" class="message-thumb">`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div class="message-content">${type === "bot" ? safeMd(content) : escapeHtml(content)}</div>`;
 
   if (debug) {
     html += `<div class="debug-bar">${escapeHtml(formatDebugBar(debug))}</div>`;
@@ -309,9 +325,84 @@ function addMessage(content, type, sources = [], debug = null) {
   chatContainer.scrollTop = chatContainer.scrollHeight;
   return message;
 }
+// ─── Image Handling ───────────────────────────────────────────────────────────
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Hapus prefix "data:image/...;base64," — RAG Core tidak mau prefix ini
+      const result = reader.result;
+      const base64 = result.includes(",") ? result.split(",")[1] : result;
+      resolve({ mime_type: file.type, data: base64, preview_url: result });
+    };
+    reader.onerror = () => reject(new Error(`Gagal membaca file: ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderImagePreviewStrip() {
+  if (pendingImages.length === 0) {
+    imagePreviewStrip.classList.add("hidden");
+    imagePreviewStrip.innerHTML = "";
+    return;
+  }
+
+  imagePreviewStrip.classList.remove("hidden");
+  imagePreviewStrip.innerHTML = "";
+
+  pendingImages.forEach((img, index) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "preview-thumb-wrapper";
+    wrapper.innerHTML = `
+      <img src="${img.preview_url}" alt="Gambar ${index + 1}" class="preview-thumb">
+      <button type="button" class="preview-remove" aria-label="Hapus gambar ${index + 1}" data-index="${index}">×</button>
+    `;
+    wrapper.querySelector(".preview-remove").addEventListener("click", () => removeImage(index));
+    imagePreviewStrip.appendChild(wrapper);
+  });
+
+  // Update tombol attach: disable jika sudah max
+  attachBtn.disabled = pendingImages.length >= MAX_IMAGES;
+  attachBtn.title = pendingImages.length >= MAX_IMAGES
+    ? `Maks. ${MAX_IMAGES} gambar`
+    : `Lampirkan gambar (maks. ${MAX_IMAGES})`;
+}
+
+async function handleImageSelect(files) {
+  const remaining = MAX_IMAGES - pendingImages.length;
+  if (remaining <= 0) return;
+
+  const toProcess = Array.from(files).slice(0, remaining);
+  try {
+    const processed = await Promise.all(toProcess.map(fileToBase64));
+    pendingImages.push(...processed);
+    renderImagePreviewStrip();
+  } catch (err) {
+    alert(`Gagal memproses gambar: ${err.message}`);
+  }
+  // Reset file input agar file yang sama bisa dipilih lagi
+  imageFileInput.value = "";
+}
+
+function removeImage(index) {
+  pendingImages.splice(index, 1);
+  renderImagePreviewStrip();
+}
+
+function clearPendingImages() {
+  pendingImages = [];
+  renderImagePreviewStrip();
+}
+
+// ─── Message Rendering ────────────────────────────────────────────────────────
+
 
 async function sendMessage(query) {
-  addMessage(query, "user");
+  const sentImages = [...pendingImages]; // simpan snapshot sebelum clear
+  clearPendingImages();
+
+  addMessage(query, "user", [], null, sentImages);
   queryInput.value = "";
   sendBtn.disabled = true;
 
@@ -324,6 +415,9 @@ async function sendMessage(query) {
 
   const body = { query };
   if (currentSessionId) body.session_id = currentSessionId;
+  if (sentImages.length > 0) {
+    body.images = sentImages.map(({ mime_type, data }) => ({ mime_type, data }));
+  }
 
   let rawText = "";
 
@@ -470,7 +564,15 @@ saveApiBtn.addEventListener("click", () => {
 chatForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const query = queryInput.value.trim();
-  if (query) sendMessage(query);
+  if (query || pendingImages.length > 0) sendMessage(query || "[Gambar dikirim]");
+});
+
+attachBtn.addEventListener("click", () => imageFileInput.click());
+
+imageFileInput.addEventListener("change", (event) => {
+  if (event.target.files && event.target.files.length > 0) {
+    handleImageSelect(event.target.files);
+  }
 });
 
 checkAuth();
