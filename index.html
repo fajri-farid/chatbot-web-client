@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNHAS Chatbot</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div id="loginOverlay" class="login-overlay hidden">
+    <section class="login-card" aria-labelledby="loginTitle">
+      <div class="login-logo">
+        <h1 id="loginTitle">UNHAS Chatbot</h1>
+        <p>Layanan informasi akademik</p>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <label class="field">
+          <span>Username</span>
+          <input id="usernameInput" type="text" autocomplete="username" placeholder="mahasiswa1" required>
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <input id="passwordInput" type="password" autocomplete="current-password" placeholder="password" required>
+        </label>
+
+        <div id="loginError" class="login-error hidden">Username atau password salah.</div>
+
+        <button id="loginBtn" type="submit" class="primary-btn">Masuk</button>
+        <button id="guestBtn" type="button" class="secondary-btn">Lanjut sebagai tamu</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="mainApp" class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">UH</div>
+        <div>
+          <h1>UNHAS Chatbot</h1>
+          <p>Layanan informasi akademik</p>
+        </div>
+      </div>
+
+      <div class="connection-panel">
+        <label for="apiBaseInput">API Main Service</label>
+        <div class="api-row">
+          <input id="apiBaseInput" type="url" value="http://localhost:8002">
+          <button id="saveApiBtn" type="button" title="Simpan API base URL">Simpan</button>
+        </div>
+        <div id="status" class="status">Mengecek koneksi...</div>
+      </div>
+
+      <div class="user-panel">
+        <span id="userLabel">Tamu</span>
+        <div class="user-actions">
+          <button id="loginOpenBtn" type="button">Login</button>
+          <button id="logoutBtn" type="button">Keluar</button>
+        </div>
+      </div>
+
+      <button id="newSessionBtn" type="button" class="new-chat-btn">Chat Baru</button>
+
+      <section class="sessions-panel">
+        <div class="panel-title">
+          <span>Riwayat</span>
+          <button id="refreshSessionsBtn" type="button" title="Refresh session">Refresh</button>
+        </div>
+        <div id="sessionsList" class="sessions-list">
+          <div class="empty-state">Login untuk melihat riwayat.</div>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <header class="chat-header">
+        <div>
+          <h2 id="sessionTitle">Chat Akademik</h2>
+          <p id="sessionSubtitle">Tanyakan informasi akademik UNHAS.</p>
+        </div>
+      </header>
+
+      <section id="chatContainer" class="chat-container" aria-live="polite">
+        <div class="message bot-message">
+          <div class="message-content">
+            Halo! Saya asisten akademik UNHAS. Silakan ajukan pertanyaan tentang informasi akademik.
+          </div>
+        </div>
+      </section>
+
+      <footer class="input-container">
+        <form id="chatForm" class="input-form">
+          <input id="queryInput" type="text" placeholder="Ketik pertanyaan Anda..." autocomplete="off" required>
+          <button id="sendBtn" type="submit">Kirim</button>
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
